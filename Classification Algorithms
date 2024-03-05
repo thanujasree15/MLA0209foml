@@ -1,0 +1,58 @@
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn import metrics
+
+# Load the iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize classifiers
+logistic_regression = LogisticRegression()
+decision_tree = DecisionTreeClassifier()
+random_forest = RandomForestClassifier()
+svm = SVC()
+knn = KNeighborsClassifier()
+naive_bayes = GaussianNB()
+
+classifiers = {
+    "Logistic Regression": logistic_regression,
+    "Decision Tree": decision_tree,
+    "Random Forest": random_forest,
+    "SVM": svm,
+    "KNN": knn,
+    "Naive Bayes": naive_bayes
+}
+
+# Evaluate classifiers using cross-validation
+for name, classifier in classifiers.items():
+    scores = cross_val_score(classifier, X_train, y_train, cv=5)
+    print(f"{name}:")
+    print(f"Cross-Validation Accuracy: {scores.mean():.2f} (+/- {scores.std() * 2:.2f})")
+
+    # Train the model
+    classifier.fit(X_train, y_train)
+
+    # Make predictions
+    y_pred = classifier.predict(X_test)
+
+    # Evaluate performance on the test set
+    accuracy = metrics.accuracy_score(y_test, y_pred)
+    precision = metrics.precision_score(y_test, y_pred, average='weighted')
+    recall = metrics.recall_score(y_test, y_pred, average='weighted')
+    f1_score = metrics.f1_score(y_test, y_pred, average='weighted')
+
+    print(f"Test Set Accuracy: {accuracy:.2f}")
+    print(f"Precision: {precision:.2f}")
+    print(f"Recall: {recall:.2f}")
+    print(f"F1 Score: {f1_score:.2f}")
+    print()
