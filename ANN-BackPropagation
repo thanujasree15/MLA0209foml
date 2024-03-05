@@ -1,0 +1,86 @@
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+
+# Sigmoid activation function and its derivative
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+class NeuralNetwork:
+    def __init__(self, input_size, hidden_size, output_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+
+        # Initialize weights
+        self.weights_input_hidden = np.random.uniform(size=(self.input_size, self.hidden_size))
+        self.weights_hidden_output = np.random.uniform(size=(self.hidden_size, self.output_size))
+
+        # Initialize biases
+        self.bias_input_hidden = np.random.uniform(size=(1, self.hidden_size))
+        self.bias_hidden_output = np.random.uniform(size=(1, self.output_size))
+
+    def forward(self, X):
+        # Forward pass
+        self.hidden_input = np.dot(X, self.weights_input_hidden) + self.bias_input_hidden
+        self.hidden_output = sigmoid(self.hidden_input)
+        self.output = np.dot(self.hidden_output, self.weights_hidden_output) + self.bias_hidden_output
+        return sigmoid(self.output)
+
+    def backward(self, X, y, output, learning_rate):
+        # Backpropagation
+        error = y - output
+        output_delta = error * sigmoid_derivative(output)
+
+        hidden_error = output_delta.dot(self.weights_hidden_output.T)
+        hidden_delta = hidden_error * sigmoid_derivative(self.hidden_output)
+
+        # Update weights and biases
+        self.weights_hidden_output += self.hidden_output.T.dot(output_delta) * learning_rate
+        self.bias_hidden_output += np.sum(output_delta, axis=0, keepdims=True) * learning_rate
+        self.weights_input_hidden += X.T.dot(hidden_delta) * learning_rate
+        self.bias_input_hidden += np.sum(hidden_delta, axis=0, keepdims=True) * learning_rate
+
+    def train(self, X, y, epochs, learning_rate):
+        for epoch in range(epochs):
+            output = self.forward(X)
+            self.backward(X, y, output, learning_rate)
+            if epoch % 1000 == 0:
+                print(f"Epoch {epoch}: Error {np.mean(np.square(y - output))}")
+
+    def predict(self, X):
+        return self.forward(X)
+
+# Load Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target.reshape(-1, 1)
+
+# One-hot encode target variable
+encoder = OneHotEncoder()
+y = encoder.fit_transform(y).toarray()
+
+# Split dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Normalize features
+X_train /= np.max(X_train)
+X_test /= np.max(X_test)
+
+# Initialize and train the neural network
+input_size = X_train.shape[1]
+hidden_size = 5
+output_size = y_train.shape[1]
+nn = NeuralNetwork(input_size, hidden_size, output_size)
+nn.train(X_train, y_train, epochs=10000, learning_rate=0.1)
+
+# Test the neural network
+predictions = nn.predict(X_test)
+
+# Print accuracy
+accuracy = np.mean(np.argmax(predictions, axis=1) == np.argmax(y_test, axis=1))
+print(f"Accuracy: {accuracy}")
