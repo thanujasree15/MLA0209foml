@@ -1,0 +1,37 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load the dataset
+data = pd.read_csv("bank_loan_dataset.csv")  # Replace "bank_loan_dataset.csv" with your dataset file
+
+# Data preprocessing
+le = LabelEncoder()
+data['Education'] = le.fit_transform(data['Education'])
+data['Income'] = le.fit_transform(data['Income'])
+data['Loan_Status'] = le.fit_transform(data['Loan_Status'])
+
+X = data.drop('Loan_Status', axis=1)
+y = data['Loan_Status']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the Naive Bayes classifier
+naive_bayes = GaussianNB()
+
+# Train the classifier
+naive_bayes.fit(X_train, y_train)
+
+# Make predictions on the testing set
+y_pred = naive_bayes.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+# Classification report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
